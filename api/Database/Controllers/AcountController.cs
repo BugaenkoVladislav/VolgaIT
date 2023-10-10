@@ -7,10 +7,11 @@ using System.Security.Claims;
 using System;
 using System.Security.Cryptography.Xml;
 using Microsoft.AspNetCore.Authorization;
+using api.Services;
 
 namespace api.Database.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Account")]
     [ApiController]
     public class AcountController : ControllerBase
     {
@@ -21,19 +22,18 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpDelete("/ChnageUser")]
-        public IActionResult SignIn(string username)
+        [HttpGet("/Me")]
+        public IActionResult Me()
         {
             try
             {
-                User? user = db.Users.FirstOrDefault(x => x.Username == username);
+                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
                 if (user == null) 
                 {
                     return BadRequest();
                 }
-                db.Remove(user);
-                db.SaveChanges();
-                return Ok();
+                return Ok(user);
             }
             catch(Exception ex)
             {
@@ -41,39 +41,49 @@ namespace api.Database.Controllers
             }
         }
 
+        [HttpPost("/SignUp")]
+        public IActionResult SignUp(string username, string password)
+        {
+            try
+            {
+                // находим пользователя 
+                User? user = db.Users.FirstOrDefault(p => p.Username == username );
+                // если пользователь не найден, отправляем статусный код 401
+                if (user is null)
+                {
+                    db.Add(new User
+                    {
+                        Username = username,
+                        Password = password,
+                        IsAdmin = false
+                    });
+                    db.SaveChanges();
+                    return Ok();
+                }
+                return BadRequest();                                                                
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+        }
+
+
+
+
 
         [HttpPost("/SignIn")]
-        public IActionResult Token(string username, string password)
+        public IActionResult SignIn(string username, string password)
         {
             try
             {
                 // находим пользователя 
                 User? user = db.Users.FirstOrDefault(p => p.Username == username && p.Password == password);
-                // если пользователь не найден, отправляем статусный код 401
                 if (user is null)
                     return StatusCode(401);
-
-                var role = user.IsAdmin ? "Admin" : "User";
-                var claims = new List<Claim> {
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, role),};
-                // создаем JWT-токен
-                var jwt = new JwtSecurityToken(
-                        issuer: AuthOptions.ISSUER,
-                        audience: AuthOptions.AUDIENCE,
-                        claims: claims,
-                        expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(5)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-                // формируем ответ
-                var response = new
-                {
-                    access_token = encodedJwt,
-                    username = user.Username
-                };
-
-                return Ok(response);
+                string token = JwtActions.GenerateToken(user);
+                return Ok(token);//возвращаем токен
             }
             catch(Exception ex)
             {
@@ -81,8 +91,53 @@ namespace api.Database.Controllers
             }
             
         }
+        [Authorize]
+        [HttpPost("/SignOut")]
+        public IActionResult SignOut()
+        {
+            try
+            {  
+                //реализация отзыва токенов
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,ex.Message);
+            }
+        }
 
- 
+        [Authorize]
+        [HttpPut("/Update")]
+        public IActionResult Update(string newUsername, string newPassword)
+        {
+            try
+            {
+                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
+                User? user = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
+                if (user is null)
+                    return BadRequest();
+                if(db.Users.FirstOrDefault(user=>user.Username == newUsername) is null)
+                {
+                    user.Password = newPassword;
+                    user.Username = newUsername;
+                    db.Update(user);
+                    db.SaveChanges();
+                    string token = JwtActions.GenerateToken(user);
+                    return Ok(token);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
 
     }
 }
