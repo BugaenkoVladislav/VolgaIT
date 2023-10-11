@@ -7,11 +7,11 @@ public partial class User
 {
     public long Id { get; set; }
 
-    public string Password { get; set; } = null!;
+    public string Username { get; set; } = null!;
 
     public double Balance { get; set; }
 
-    public string Username { get; set; } = null!;
+    public string Password { get; set; } = null!;
 
     public bool IsAdmin { get; set; }
 

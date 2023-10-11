@@ -9,7 +9,7 @@ public partial class Rent
 
     public DateTime TimeStart { get; set; }
 
-    public DateTime? TimeEnd { get; set; }
+    public DateTime[]? TimeEnd { get; set; }
 
     public long IdTransport { get; set; }
 
@@ -17,7 +17,7 @@ public partial class Rent
 
     public double PriceOfUnit { get; set; }
 
-    public long PriceType { get; set; }
+    public long? PriceType { get; set; }
 
     public double? FinalPrice { get; set; }
 
@@ -25,5 +25,5 @@ public partial class Rent
 
     public virtual User IdUserNavigation { get; set; } = null!;
 
-    public virtual RentType PriceTypeNavigation { get; set; } = null!;
+    public virtual RentType? PriceTypeNavigation { get; set; }
 }

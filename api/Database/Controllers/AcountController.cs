@@ -49,7 +49,7 @@ namespace api.Database.Controllers
                 User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username);                
                 if (usr is null)
                 {
-                    db.Add(user);
+                    db.Users.Add(user);
                     db.SaveChanges();
                     return Ok();
                 }
@@ -113,11 +113,11 @@ namespace api.Database.Controllers
                 User? jwtUsr = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
                 if (jwtUsr is null)
                     return StatusCode(401);
-                if((db.Users.First(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
+                if((db.Users.FirstOrDefault(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
                 {
                     jwtUsr.Password = user.Password;
                     jwtUsr.Username = user.Username;
-                    db.Update(jwtUsr);
+                    db.Users.Update(jwtUsr);
                     db.SaveChanges();
                     return Ok(JwtActions.GenerateToken(jwtUsr));
                 }

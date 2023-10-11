@@ -32,7 +32,7 @@ public partial class SimbirGoContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Password=P@ssw0rd;Database=Simbir.GO");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Database=Simbir.GO;Password=Chmonya");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -83,7 +83,6 @@ public partial class SimbirGoContext : DbContext
 
             entity.HasOne(d => d.PriceTypeNavigation).WithMany(p => p.Rents)
                 .HasForeignKey(d => d.PriceType)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Rents_priceType_fkey");
         });
 
@@ -92,7 +91,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("RentTypes_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.RentType1).HasColumnName("rentType");
         });
@@ -114,7 +113,7 @@ public partial class SimbirGoContext : DbContext
             entity.Property(e => e.IdOwner).HasColumnName("idOwner");
             entity.Property(e => e.IdTransportType).HasColumnName("idTransportType");
             entity.Property(e => e.Identifier).HasColumnName("identifier");
-            entity.Property(e => e.Latitute).HasColumnName("latitute");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
             entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.MinutePrice).HasColumnName("minutePrice");
 
