@@ -32,7 +32,7 @@ public partial class SimbirGoContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Database=Simbir.GO;Password=Chmonya");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Password=P@ssw0rd;Database=Simbir.GO");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,7 +41,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("Colors_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.Color1).HasColumnName("color");
         });
@@ -51,7 +51,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("Models_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.Model1).HasColumnName("model");
         });
@@ -61,7 +61,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("Rents_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.FinalPrice).HasColumnName("finalPrice");
             entity.Property(e => e.IdTransport).HasColumnName("idTransport");
@@ -83,6 +83,7 @@ public partial class SimbirGoContext : DbContext
 
             entity.HasOne(d => d.PriceTypeNavigation).WithMany(p => p.Rents)
                 .HasForeignKey(d => d.PriceType)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Rents_priceType_fkey");
         });
 
@@ -103,7 +104,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasIndex(e => e.Identifier, "Transports_identifier_identifier1_key").IsUnique();
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.CanBeRented).HasColumnName("canBeRented");
             entity.Property(e => e.DayPrice).HasColumnName("dayPrice");
@@ -113,7 +114,7 @@ public partial class SimbirGoContext : DbContext
             entity.Property(e => e.IdOwner).HasColumnName("idOwner");
             entity.Property(e => e.IdTransportType).HasColumnName("idTransportType");
             entity.Property(e => e.Identifier).HasColumnName("identifier");
-            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.Latitute).HasColumnName("latitute");
             entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.MinutePrice).HasColumnName("minutePrice");
 
@@ -143,7 +144,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("TransportTypes_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.TransportType1).HasColumnName("transportType");
         });

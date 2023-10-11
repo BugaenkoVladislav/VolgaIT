@@ -17,15 +17,15 @@ public partial class Transport
 
     public string Identifier { get; set; } = null!;
 
-    public double Latitude { get; set; }
+    public double Latitute { get; set; }
 
     public double Longitude { get; set; }
+
+    public string? Description { get; set; }
 
     public double? MinutePrice { get; set; }
 
     public double? DayPrice { get; set; }
-
-    public string? Description { get; set; }
 
     public long IdOwner { get; set; }
 

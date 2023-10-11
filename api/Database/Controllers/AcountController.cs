@@ -11,7 +11,7 @@ using api.Services;
 
 namespace api.Database.Controllers
 {
-    [Route("api/Account")]
+    [Route("api")]
     [ApiController]
     public class AcountController : ControllerBase
     {
@@ -22,7 +22,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/Me")]
+        [HttpGet("/Account/Me")]
         public IActionResult Me()
         {
             try
@@ -41,26 +41,21 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPost("/SignUp")]
-        public IActionResult SignUp(string username, string password)
+        [HttpPost("/Account/SignUp")]
+        public IActionResult SignUp([FromBody] User user)
         {
             try
             {
-                // находим пользователя 
-                User? user = db.Users.FirstOrDefault(p => p.Username == username );
-                // если пользователь не найден, отправляем статусный код 401
-                if (user is null)
+                User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username);                
+                if (usr is null)
                 {
-                    db.Add(new User
-                    {
-                        Username = username,
-                        Password = password,
-                        IsAdmin = false
-                    });
+                    db.Add(user);
                     db.SaveChanges();
                     return Ok();
                 }
-                return BadRequest();                                                                
+                return StatusCode(401);
+
+
             }
             catch (Exception ex)
             {
@@ -73,16 +68,16 @@ namespace api.Database.Controllers
 
 
 
-        [HttpPost("/SignIn")]
-        public IActionResult SignIn(string username, string password)
+        [HttpPost("/Account/SignIn")]
+        public IActionResult SignIn([FromBody] User user)
         {
             try
             {
+                User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username && p.Password == user.Password);
                 // находим пользователя 
-                User? user = db.Users.FirstOrDefault(p => p.Username == username && p.Password == password);
-                if (user is null)
+                if ( usr is null)
                     return StatusCode(401);
-                string token = JwtActions.GenerateToken(user);
+                string token = JwtActions.GenerateToken(usr);
                 return Ok(token);//возвращаем токен
             }
             catch(Exception ex)
@@ -92,12 +87,12 @@ namespace api.Database.Controllers
             
         }
         [Authorize]
-        [HttpPost("/SignOut")]
+        [HttpPost("/Account/SignOut")]
         public IActionResult SignOut()
         {
             try
             {  
-                //реализация отзыва токенов
+                //реализация отзыва токенов cоздай блэклист лог в бд или в софте
                 return Ok();
             }
             catch (Exception ex)
@@ -106,29 +101,27 @@ namespace api.Database.Controllers
             }
         }
 
+
+
         [Authorize]
-        [HttpPut("/Update")]
-        public IActionResult Update(string newUsername, string newPassword)
+        [HttpPut("/Account/Update")]
+        public IActionResult Update([FromBody] User user)
         {
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
-                User? user = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
-                if (user is null)
-                    return BadRequest();
-                if(db.Users.FirstOrDefault(user=>user.Username == newUsername) is null)
+                User? jwtUsr = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
+                if (jwtUsr is null)
+                    return StatusCode(401);
+                if((db.Users.First(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
                 {
-                    user.Password = newPassword;
-                    user.Username = newUsername;
-                    db.Update(user);
+                    jwtUsr.Password = user.Password;
+                    jwtUsr.Username = user.Username;
+                    db.Update(jwtUsr);
                     db.SaveChanges();
-                    string token = JwtActions.GenerateToken(user);
-                    return Ok(token);
+                    return Ok(JwtActions.GenerateToken(jwtUsr));
                 }
-                else
-                {
-                    return BadRequest();
-                }
+                return BadRequest();    
                 
             }
             catch (Exception ex)
