@@ -33,6 +33,7 @@ namespace api.Database.Controllers
                 }
                 return Ok(new TransportInfo
                 {
+                    Id = transportInfo.Id,
                     CanBeRented = transportInfo.CanBeRented,
                     TransportType = transportInfo.TransportType,
                     Model = transportInfo.Model,
@@ -114,7 +115,7 @@ namespace api.Database.Controllers
                 
                 db.Update(transport);
                 db.SaveChanges();
-                return Ok();
+                return Ok(transport);
 
             }
             catch(Exception ex)
