@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using api.Database.Models;
 using api.Database.Views;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +17,13 @@ public partial class SimbirGoContext : DbContext
     {
     }
 
-    public virtual DbSet<Models.Color> Colors { get; set; }
+    public virtual DbSet<Color> Colors { get; set; }
 
     public virtual DbSet<Model> Models { get; set; }
 
     public virtual DbSet<Rent> Rents { get; set; }
+
+    public virtual DbSet<RentInfo> RentInfos { get; set; }
 
     public virtual DbSet<RentType> RentTypes { get; set; }
 
@@ -40,7 +41,7 @@ public partial class SimbirGoContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Models.Color>(entity =>
+        modelBuilder.Entity<Color>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Colors_pkey");
 
@@ -91,12 +92,24 @@ public partial class SimbirGoContext : DbContext
                 .HasConstraintName("Rents_priceType_fkey");
         });
 
+        modelBuilder.Entity<RentInfo>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("RentInfo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IdTransport).HasColumnName("idTransport");
+            entity.Property(e => e.Owner).HasColumnName("owner");
+            entity.Property(e => e.User).HasColumnName("user");
+        });
+
         modelBuilder.Entity<RentType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("RentTypes_pkey");
 
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.RentType1).HasColumnName("rentType");
         });

@@ -44,12 +44,39 @@ namespace api.Database.Controllers
         public IActionResult GetRentInfo([FromRoute] int rentId)
         {
             try
-            {               
-                return Ok();
+            {    
+                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
+                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                RentInfo? rent = db.RentInfos.First(x=> x.Id == rentId);
+                if (user == null)
+                    return StatusCode(401);
+                if (rent == null)
+                    return BadRequest("id with this rent not exist");
+                if(user.Username == rent.User || user.Username == rent.Owner)
+                    return Ok(rent);
+                return BadRequest();
             }
             catch (Exception ex)
             {
                 return StatusCode(500,ex.Message);
+            }
+        }
+
+
+        [Authorize]
+        [HttpGet("/Rent/MyHistory")]
+        public IActionResult GetUserRentInfo()//works but i wanna some remade RentInfo and Rents
+        {
+            try
+            {
+                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                List <RentInfo> rents = db.RentInfos.Where(x => x.User == user.Username).ToList();
+                return Ok(rents);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
 
