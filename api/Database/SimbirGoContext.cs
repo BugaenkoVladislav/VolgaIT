@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using api.Database.Models;
+using api.Database.Views;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Database;
@@ -16,7 +18,7 @@ public partial class SimbirGoContext : DbContext
     {
     }
 
-    public virtual DbSet<Color> Colors { get; set; }
+    public virtual DbSet<Models.Color> Colors { get; set; }
 
     public virtual DbSet<Model> Models { get; set; }
 
@@ -26,17 +28,19 @@ public partial class SimbirGoContext : DbContext
 
     public virtual DbSet<Transport> Transports { get; set; }
 
+    public virtual DbSet<TransportInfo> TransportInfos { get; set; }
+
     public virtual DbSet<TransportType> TransportTypes { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Database=Simbir.GO;Password=Chmonya");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Database=Simbir.GO;Password=P@ssw0rd");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Color>(entity =>
+        modelBuilder.Entity<Models.Color>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Colors_pkey");
 
@@ -83,6 +87,7 @@ public partial class SimbirGoContext : DbContext
 
             entity.HasOne(d => d.PriceTypeNavigation).WithMany(p => p.Rents)
                 .HasForeignKey(d => d.PriceType)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Rents_priceType_fkey");
         });
 
@@ -91,7 +96,7 @@ public partial class SimbirGoContext : DbContext
             entity.HasKey(e => e.Id).HasName("RentTypes_pkey");
 
             entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
+                .ValueGeneratedNever()
                 .HasColumnName("id");
             entity.Property(e => e.RentType1).HasColumnName("rentType");
         });
@@ -136,6 +141,25 @@ public partial class SimbirGoContext : DbContext
                 .HasForeignKey(d => d.IdTransportType)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Transports_idTransportType_fkey");
+        });
+
+        modelBuilder.Entity<TransportInfo>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("TransportInfo");
+
+            entity.Property(e => e.CanBeRented).HasColumnName("canBeRented");
+            entity.Property(e => e.Color).HasColumnName("color");
+            entity.Property(e => e.DayPrice).HasColumnName("dayPrice");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Identifier).HasColumnName("identifier");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
+            entity.Property(e => e.MinutePrice).HasColumnName("minutePrice");
+            entity.Property(e => e.Model).HasColumnName("model");
+            entity.Property(e => e.TransportType).HasColumnName("transportType");
         });
 
         modelBuilder.Entity<TransportType>(entity =>

@@ -1,4 +1,4 @@
-﻿using api.Database.Models;
+﻿
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -8,6 +8,7 @@ using System;
 using System.Security.Cryptography.Xml;
 using Microsoft.AspNetCore.Authorization;
 using api.Services;
+using api.Database.Models;
 
 namespace api.Database.Controllers
 {
@@ -49,7 +50,7 @@ namespace api.Database.Controllers
                 User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username);                
                 if (usr is null)
                 {
-                    db.Users.Add(user);
+                    db.Add(user);
                     db.SaveChanges();
                     return Ok();
                 }
@@ -117,7 +118,7 @@ namespace api.Database.Controllers
                 {
                     jwtUsr.Password = user.Password;
                     jwtUsr.Username = user.Username;
-                    db.Users.Update(jwtUsr);
+                    db.Update(jwtUsr);
                     db.SaveChanges();
                     return Ok(JwtActions.GenerateToken(jwtUsr));
                 }
@@ -131,6 +132,6 @@ namespace api.Database.Controllers
         }
         
 
-
+        
     }
 }

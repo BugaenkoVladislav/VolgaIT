@@ -21,11 +21,11 @@ public partial class Transport
 
     public double Longitude { get; set; }
 
+    public string? Description { get; set; }
+
     public double? MinutePrice { get; set; }
 
     public double? DayPrice { get; set; }
-
-    public string? Description { get; set; }
 
     public long IdOwner { get; set; }
 
