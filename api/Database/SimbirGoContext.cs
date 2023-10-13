@@ -98,9 +98,14 @@ public partial class SimbirGoContext : DbContext
                 .HasNoKey()
                 .ToView("RentInfo");
 
+            entity.Property(e => e.FinalPrice).HasColumnName("finalPrice");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IdTransport).HasColumnName("idTransport");
             entity.Property(e => e.Owner).HasColumnName("owner");
+            entity.Property(e => e.PriceOfUnit).HasColumnName("priceOfUnit");
+            entity.Property(e => e.PriceType).HasColumnName("priceType");
+            entity.Property(e => e.TimeEnd).HasColumnName("timeEnd");
+            entity.Property(e => e.TimeStart).HasColumnName("timeStart");
             entity.Property(e => e.User).HasColumnName("user");
         });
 
