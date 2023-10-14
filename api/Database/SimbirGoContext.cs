@@ -37,7 +37,7 @@ public partial class SimbirGoContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=Simbir.GO;Password=Chmonya;Username=postgres");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Database=Simbir.GO;Password=Chmonya");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,13 +100,13 @@ public partial class SimbirGoContext : DbContext
 
             entity.Property(e => e.FinalPrice).HasColumnName("finalPrice");
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IdTransport).HasColumnName("idTransport");
-            entity.Property(e => e.Owner).HasColumnName("owner");
+            entity.Property(e => e.OwnerId).HasColumnName("ownerId");
             entity.Property(e => e.PriceOfUnit).HasColumnName("priceOfUnit");
             entity.Property(e => e.PriceType).HasColumnName("priceType");
             entity.Property(e => e.TimeEnd).HasColumnName("timeEnd");
             entity.Property(e => e.TimeStart).HasColumnName("timeStart");
-            entity.Property(e => e.User).HasColumnName("user");
+            entity.Property(e => e.TransportId).HasColumnName("transportId");
+            entity.Property(e => e.UserId).HasColumnName("userId");
         });
 
         modelBuilder.Entity<RentType>(entity =>

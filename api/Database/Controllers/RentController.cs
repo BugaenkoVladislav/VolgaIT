@@ -55,7 +55,7 @@ namespace api.Database.Controllers
                 RentInfo? rent = db.RentInfos.First(x => x.Id == rentId);
                 if (rent == null)
                     return BadRequest("id with this rent not exist");
-                if (user.Id == rent.User || user.Username == rent.Owner)
+                if (user.Id == rent.UserId || user.Id == rent.OwnerId)
                     return Ok(rent);
                 return BadRequest();
             }
@@ -96,7 +96,7 @@ namespace api.Database.Controllers
                     return BadRequest("uncorrect Id transport");
                 if (transport.IdOwner == user.Id)
                 {
-                    List<RentInfo> rentInfos = db.RentInfos.Where(x => x.IdTransport == transportId).ToList();
+                    List<RentInfo> rentInfos = db.RentInfos.Where(x => x.TransportId == transportId).ToList();
                     return Ok(rentInfos);
                 }
                 return BadRequest("not owner");

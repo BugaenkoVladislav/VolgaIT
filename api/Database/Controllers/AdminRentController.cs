@@ -42,7 +42,7 @@ namespace api.Database.Controllers
                 User? user = db.Users.FirstOrDefault(x => x.Id == userId);
                 if(user == null)
                     return BadRequest("User with this Id not exist");
-                var rent = db.RentInfos.Where(x => x.User == user.Id).ToList();
+                var rent = db.RentInfos.Where(x => x.UserId == user.Id).ToList();
                 return Ok(rent);
             }
             catch (Exception ex)
@@ -59,7 +59,7 @@ namespace api.Database.Controllers
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == transportId);
                 if (transport == null)
                     return BadRequest("Transport with this Id not exist");
-                var rent = db.RentInfos.Where(x => x.IdTransport == transportId).ToList();
+                var rent = db.RentInfos.Where(x => x.TransportId == transportId).ToList();
                 return Ok(rent);
             }
             catch (Exception ex)
@@ -72,8 +72,8 @@ namespace api.Database.Controllers
         {
             try
             {
-                User? user = db.Users.FirstOrDefault(x=> x.Id == rent.User);
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rent.IdTransport);                
+                User? user = db.Users.FirstOrDefault(x=> x.Id == rent.UserId);
+                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rent.TransportId);                
                 if (user == null)
                     return BadRequest("User with this ID does not exist");
                 if(transport == null)
@@ -104,8 +104,8 @@ namespace api.Database.Controllers
             try
             {
                 Rent? rent = db.Rents.FirstOrDefault(x => x.Id == id);
-                User? user = db.Users.FirstOrDefault(x => x.Id == rentInfo.User);
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rentInfo.IdTransport);
+                User? user = db.Users.FirstOrDefault(x => x.Id == rentInfo.UserId);
+                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rentInfo.TransportId);
                 if (rent == null)
                     return BadRequest("Rent with this ID does not exist");
                 if (user == null)

@@ -7,11 +7,11 @@ public partial class RentInfo
 {
     public long? Id { get; set; }
 
-    public long? User { get; set; }
+    public long? UserId { get; set; }
 
-    public long? IdTransport { get; set; }
+    public long? TransportId { get; set; }
 
-    public string? Owner { get; set; }
+    public long? OwnerId { get; set; }
 
     public DateTime? TimeStart { get; set; }
 
