@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Text.Json.Serialization;
 
 namespace api.Database.Models;
 
@@ -28,14 +27,14 @@ public partial class Transport
     public double? DayPrice { get; set; }
 
     public long IdOwner { get; set; }
-
+    [JsonIgnore]
     public virtual Color IdColorNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual Model IdModelNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual User IdOwnerNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual TransportType IdTransportTypeNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual ICollection<Rent> Rents { get; set; } = new List<Rent>();
 }

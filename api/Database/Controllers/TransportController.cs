@@ -73,10 +73,7 @@ namespace api.Database.Controllers
                     MinutePrice = Convert.ToDouble(transportInfo.MinutePrice),
                     DayPrice = Convert.ToDouble(transportInfo.DayPrice),
                     Description = transportInfo.Description,
-                    IdOwner = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt)).Id,
-                    IdOwnerNavigation = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt)),
-                    IdColorNavigation = db.Colors.First(x=>x.Color1 == transportInfo.Color),
-                    IdModelNavigation = db.Models.First(x => x.Model1 == transportInfo.Model)
+                    IdOwner = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt)).Id
                 });
                 db.SaveChanges();
                 

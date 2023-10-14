@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Text.Json.Serialization;
 
 namespace api.Database.Models;
 
@@ -9,5 +8,6 @@ public partial class RentType
 
     public string RentType1 { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual ICollection<Rent> Rents { get; set; } = new List<Rent>();
 }

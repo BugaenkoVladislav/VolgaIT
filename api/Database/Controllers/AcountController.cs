@@ -46,11 +46,16 @@ namespace api.Database.Controllers
         public IActionResult SignUp([FromBody] User user)
         {
             try
-            {
-                User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username);                
-                if (usr is null)
+            {           
+                if (db.Users.FirstOrDefault(p => p.Username == user.Username) == null)
                 {
-                    db.Add(user);
+                    db.Add(new User
+                    {
+                        Username = user.Username,
+                        Password = user.Password,
+                        IsAdmin = false,
+                        Balance = 0
+                    });
                     db.SaveChanges();
                     return Ok();
                 }
@@ -87,6 +92,7 @@ namespace api.Database.Controllers
             }
             
         }
+
         [Authorize]
         [HttpPost("/Account/SignOut")]
         public IActionResult SignOut()

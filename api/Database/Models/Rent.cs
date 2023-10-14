@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
+using System.Text.Json.Serialization;
 
 namespace api.Database.Models;
 
@@ -21,9 +21,10 @@ public partial class Rent
 
     public double? FinalPrice { get; set; }
 
+    [JsonIgnore]
     public virtual Transport IdTransportNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual User IdUserNavigation { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual RentType PriceTypeNavigation { get; set; } = null!;
 }
