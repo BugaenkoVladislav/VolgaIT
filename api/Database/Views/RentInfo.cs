@@ -7,7 +7,7 @@ public partial class RentInfo
 {
     public long? Id { get; set; }
 
-    public string? User { get; set; }
+    public long? User { get; set; }
 
     public long? IdTransport { get; set; }
 
@@ -17,7 +17,7 @@ public partial class RentInfo
 
     public DateTime? TimeEnd { get; set; }
 
-    public long? PriceType { get; set; }
+    public string? PriceType { get; set; }
 
     public double? PriceOfUnit { get; set; }
 

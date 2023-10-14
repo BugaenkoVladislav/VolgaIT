@@ -55,7 +55,7 @@ namespace api.Database.Controllers
                 RentInfo? rent = db.RentInfos.First(x => x.Id == rentId);
                 if (rent == null)
                     return BadRequest("id with this rent not exist");
-                if (user.Username == rent.User || user.Username == rent.Owner)
+                if (user.Id == rent.User || user.Username == rent.Owner)
                     return Ok(rent);
                 return BadRequest();
             }
@@ -74,7 +74,7 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
-                List<RentInfo> rents = db.RentInfos.Where(x => x.User == user.Username).ToList();
+                List<RentInfo> rents = db.RentInfos.Where(x => x.Id == user.Id).ToList();
                 return Ok(rents);
             }
             catch (Exception ex)
@@ -154,28 +154,32 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
-                Rent rent = db.Rents.First(x => x.Id == rentId);
-                Transport transport = db.Transports.First(x=>x.Id == rent.IdTransport);
-                if (rent.IdUser == user.Id)
+                Rent? rent = db.Rents.FirstOrDefault(x => x.Id == rentId);
+                if(rent != null)
                 {
-                    rent.TimeEnd = DateTime.UtcNow;
-                    TimeSpan difference = DateTime.UtcNow - rent.TimeStart;
-                    if(rent.PriceType == 2)
+                    Transport transport = db.Transports.First(x => x.Id == rent.IdTransport);
+                    if (rent.IdUser == user.Id)
                     {
-                        rent.FinalPrice = difference.Days + 1 * rent.PriceOfUnit;
-                    }                       
-                    else if(rent.PriceType == 1)
-                    {
-                        rent.FinalPrice = (difference.Minutes + (difference.Hours * 60) + (difference.Days * 24 * 60)) * rent.PriceOfUnit;                       
+                        rent.TimeEnd = DateTime.UtcNow;
+                        TimeSpan difference = DateTime.UtcNow - rent.TimeStart;
+                        if (rent.PriceType == 2)
+                        {
+                            rent.FinalPrice = difference.Days + 1 * rent.PriceOfUnit;
+                        }
+                        else if (rent.PriceType == 1)
+                        {
+                            rent.FinalPrice = (difference.Minutes + (difference.Hours * 60) + (difference.Days * 24 * 60)) * rent.PriceOfUnit;
+                        }
+                        db.Update(rent);
+                        transport.Latitude = lat;
+                        transport.Longitude = @long;
+                        db.Update(transport);
+                        db.SaveChanges();
+                        return Ok();
                     }
-                    db.Update(rent);                   
-                    transport.Latitude = lat;
-                    transport.Longitude = @long;
-                    db.Update(transport);
-                    db.SaveChanges();
-                    return Ok();
+                    return BadRequest("not your rent");
                 }
-                return BadRequest("not your rent");
+                return BadRequest("Rent with this Id does not exist");               
             }
             catch (Exception ex)
             {
