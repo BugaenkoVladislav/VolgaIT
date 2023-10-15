@@ -26,7 +26,7 @@ namespace api.Database.Controllers
         {
             try
             {
-                TransportInfo? transportInfo = db.TransportInfos.First(x=>x.Id == id);
+                TransportInfo? transportInfo = db.TransportInfos.FirstOrDefault(x=>x.Id == id);
                 if(transportInfo is null) 
                 {
                     return BadRequest();
@@ -77,7 +77,7 @@ namespace api.Database.Controllers
                 });
                 db.SaveChanges();
                 
-                return Ok();
+                return Ok(db.TransportInfos.First(x=>x.Identifier == transportInfo.Identifier));
             }
             catch(Exception ex) 
             {
@@ -98,8 +98,7 @@ namespace api.Database.Controllers
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
                 if (transport == null || transport.IdOwner != user.Id)
                     return BadRequest("not owner");
-                transport.CanBeRented = (bool)transportInfo.CanBeRented;
-                transport.IdTransportType = db.TransportTypes.First(x => x.TransportType1 == transportInfo.TransportType).Id;
+                transport.CanBeRented = (bool)transportInfo.CanBeRented;                
                 transport.IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id;
                 transport.IdColor = db.Colors.First(x => x.Color1 == transportInfo.Color).Id;
                 transport.Identifier = transportInfo.Identifier;

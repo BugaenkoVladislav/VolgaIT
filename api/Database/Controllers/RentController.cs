@@ -24,18 +24,21 @@ namespace api.Database.Controllers
 
 
         [HttpGet("/Rent/Transport")]
-        public IActionResult RentTransportRadius(double lat, double @long, double radius)
+        public IActionResult RentTransportRadius(double lat, double @long, double radius, string type)
         {
             try
             {
+                TransportType? transportType = db.TransportTypes.FirstOrDefault(x => x.TransportType1 == type);
+                if (transportType == null)
+                    return BadRequest("not have this type");
                 List<long> tsId = new List<long>();
-                foreach (var t in db.Transports)
+                foreach (var t in db.Transports.Where(x=>x.IdTransportType == transportType.Id).ToList())
                 {
                     double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
                     if (d <= radius)
                         tsId.Add(t.Id);
                 }
-                var transports = db.TransportInfos.Where(u => tsId.Contains((u.Id.Value))).ToList();
+                var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
                 return Ok(transports);
             }
             catch (Exception ex)
@@ -52,7 +55,7 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
-                RentInfo? rent = db.RentInfos.First(x => x.Id == rentId);
+                RentInfo? rent = db.RentInfos.FirstOrDefault(x => x.Id == rentId);
                 if (rent == null)
                     return BadRequest("id with this rent not exist");
                 if (user.Id == rent.UserId || user.Id == rent.OwnerId)
@@ -74,7 +77,7 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
-                List<RentInfo> rents = db.RentInfos.Where(x => x.Id == user.Id).ToList();
+                List<RentInfo> rents = db.RentInfos.Where(x => x.UserId == user.Id).ToList();
                 return Ok(rents);
             }
             catch (Exception ex)
@@ -115,8 +118,16 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
-                RentType priceType = db.RentTypes.First(x => x.RentType1 == rentType);
-                double priceOfUnit;
+                Transport? ts = db.Transports.FirstOrDefault(x => x.Id == transportId);
+                if (ts == null || ts.CanBeRented == false)
+                    return BadRequest("Transport with this ID does not exist");
+                if(ts.IdOwner == user.Id)
+                    return BadRequest("owner can not rent him transport");
+                
+                RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rentType);
+                if (priceType == null)
+                    return BadRequest("not have this type");
+                double priceOfUnit=0;
                 switch (priceType.Id)
                 {
                     case 1:
@@ -124,9 +135,7 @@ namespace api.Database.Controllers
                         break;
                     case 2:
                         priceOfUnit = Convert.ToDouble(db.Transports.First(x => x.Id == transportId).DayPrice);
-                        break;
-                    default:
-                        return BadRequest("not have this type");
+                        break;                        
                 }
 
                 db.Add(new Rent
@@ -138,7 +147,8 @@ namespace api.Database.Controllers
                     PriceOfUnit = priceOfUnit
                 });
                 db.SaveChanges();
-                return Ok();
+                return Ok();                               
+                
             }
             catch (Exception ex)
             {
@@ -164,7 +174,7 @@ namespace api.Database.Controllers
                         TimeSpan difference = DateTime.UtcNow - rent.TimeStart;
                         if (rent.PriceType == 2)
                         {
-                            rent.FinalPrice = difference.Days + 1 * rent.PriceOfUnit;
+                            rent.FinalPrice = (difference.Days + 1) * rent.PriceOfUnit;
                         }
                         else if (rent.PriceType == 1)
                         {

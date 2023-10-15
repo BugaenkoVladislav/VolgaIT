@@ -76,7 +76,7 @@ namespace api.Database.Controllers
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rent.TransportId);                
                 if (user == null)
                     return BadRequest("User with this ID does not exist");
-                if(transport == null)
+                if(transport == null || transport.CanBeRented == false)
                     return BadRequest("Transport with this ID does not exist");
                 RentType priceType = db.RentTypes.First(x => x.RentType1 == rent.PriceType);
                 db.Add(new Rent
