@@ -30,10 +30,6 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
                 User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null) 
-                {
-                    return BadRequest();
-                }
                 return Ok(user);
             }
             catch(Exception ex)
@@ -59,15 +55,12 @@ namespace api.Database.Controllers
                     db.SaveChanges();
                     return Ok();
                 }
-                return StatusCode(401);
-
-
+                return BadRequest("This username allready exist");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
-
         }
 
 
@@ -118,8 +111,6 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
                 User? jwtUsr = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
-                if (jwtUsr is null)
-                    return StatusCode(401);
                 if((db.Users.FirstOrDefault(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
                 {
                     jwtUsr.Password = user.Password;

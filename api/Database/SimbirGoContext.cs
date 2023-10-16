@@ -11,7 +11,6 @@ public partial class SimbirGoContext : DbContext
     public SimbirGoContext()
     {
     }
-
     public SimbirGoContext(DbContextOptions<SimbirGoContext> options)
         : base(options)
     {

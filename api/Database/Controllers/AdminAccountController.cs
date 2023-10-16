@@ -23,7 +23,7 @@ namespace api.Database.Controllers
         {
             try
             {               
-                var users = db.Users.Where(x => x.Id >= start && x.Id <= start + count).ToList();
+                var users = db.Users.Skip(start).Take(count).ToList();
                 return Ok(users);
             }
             catch (Exception ex)

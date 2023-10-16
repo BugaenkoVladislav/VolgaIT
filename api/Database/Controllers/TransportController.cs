@@ -27,7 +27,7 @@ namespace api.Database.Controllers
             try
             {
                 TransportInfo? transportInfo = db.TransportInfos.FirstOrDefault(x=>x.Id == id);
-                if(transportInfo is null) 
+                if (transportInfo is null)
                 {
                     return BadRequest();
                 }
@@ -61,8 +61,7 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 db.Add(new Transport
-                {
-                    
+                {                   
                     CanBeRented = (bool)transportInfo.CanBeRented,
                     IdTransportType = db.TransportTypes.First(x => x.TransportType1 == transportInfo.TransportType).Id,
                     IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id,
@@ -75,8 +74,7 @@ namespace api.Database.Controllers
                     Description = transportInfo.Description,
                     IdOwner = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt)).Id
                 });
-                db.SaveChanges();
-                
+                db.SaveChanges();                
                 return Ok(db.TransportInfos.First(x=>x.Identifier == transportInfo.Identifier));
             }
             catch(Exception ex) 
