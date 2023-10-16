@@ -29,7 +29,7 @@ namespace api.Database.Controllers
                 TransportInfo? transportInfo = db.TransportInfos.FirstOrDefault(x=>x.Id == id);
                 if (transportInfo is null)
                 {
-                    return BadRequest();
+                    return NotFound("Transport with this id not exist");
                 }
                 return Ok(new TransportInfo
                 {
@@ -60,6 +60,9 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user is null)
+                    return NotFound("Uncorrect Token");
                 db.Add(new Transport
                 {                   
                     CanBeRented = (bool)transportInfo.CanBeRented,
@@ -92,10 +95,10 @@ namespace api.Database.Controllers
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
                 User? user = db.Users.FirstOrDefault(x=> x.Username == JwtActions.ReturnUsername(jwt));
                 if (user is null)
-                    return StatusCode(401);
+                    return NotFound("Uncorrect Token");
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
                 if (transport == null || transport.IdOwner != user.Id)
-                    return BadRequest("not owner");
+                    return Forbid("Not owner");
                 transport.CanBeRented = (bool)transportInfo.CanBeRented;                
                 transport.IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id;
                 transport.IdColor = db.Colors.First(x => x.Color1 == transportInfo.Color).Id;
@@ -125,10 +128,12 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token");
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
                 if (transport == null || user.Id != transport.IdOwner)
-                    return BadRequest("not owner ");
+                    return Forbid("not owner ");
                 db.Remove(transport);
                 db.SaveChanges();
                 return Ok();    

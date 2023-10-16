@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using NpgsqlTypes;
 using System.Data;
+using System.Linq;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -54,13 +55,16 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
                 RentInfo? rent = db.RentInfos.FirstOrDefault(x => x.Id == rentId);
+                if(user == null)
+                    return NotFound("Uncorrect Token");
                 if (rent == null)
-                    return BadRequest("id with this rent not exist");
-                if (user.Id == rent.UserId || user.Id == rent.OwnerId)
+                    return NotFound("id with this rent not exist");
+                if (user.Id != rent.UserId || user.Id != rent.OwnerId)
                     return Ok(rent);
                 return BadRequest();
+                
             }
             catch (Exception ex)
             {
@@ -76,7 +80,9 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token ");
                 List<RentInfo> rents = db.RentInfos.Where(x => x.UserId == user.Id).ToList();
                 return Ok(rents);
             }
@@ -93,16 +99,18 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token");
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == transportId);
                 if (transport is null)
-                    return BadRequest("uncorrect Id transport");
+                    return NotFound("uncorrect Id transport");
                 if (transport.IdOwner == user.Id)
                 {
                     List<RentInfo> rentInfos = db.RentInfos.Where(x => x.TransportId == transportId).ToList();
                     return Ok(rentInfos);
                 }
-                return BadRequest("not owner");
+                return Forbid("not owner");
             }
             catch (Exception ex)
             {
@@ -117,12 +125,14 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token");
                 Transport? ts = db.Transports.FirstOrDefault(x => x.Id == transportId);
                 if (ts == null || ts.CanBeRented == false)
-                    return BadRequest("Transport with this ID does not exist");
+                    return NotFound("Transport with this ID does not exist");
                 if(ts.IdOwner == user.Id)
-                    return BadRequest("owner can not rent him transport");
+                    return Forbid("owner can not rent him transport");
                 
                 RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rentType);
                 if (priceType == null)
@@ -163,7 +173,9 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token");
                 Rent? rent = db.Rents.FirstOrDefault(x => x.Id == rentId);
                 if(rent != null)
                 {
@@ -187,9 +199,9 @@ namespace api.Database.Controllers
                         db.SaveChanges();
                         return Ok();
                     }
-                    return BadRequest("not your rent");
+                    return Forbid("not your rent");
                 }
-                return BadRequest("Rent with this Id does not exist");               
+                return NotFound("Rent with this Id does not exist");               
             }
             catch (Exception ex)
             {

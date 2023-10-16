@@ -22,9 +22,9 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
-                User? user = db.Users.First(x=> x.Username == JwtActions.ReturnUsername(jwt));
+                User? user = db.Users.FirstOrDefault(x=> x.Username == JwtActions.ReturnUsername(jwt));
                 if (user == null)
-                    return StatusCode(401);
+                    return NotFound("Uncorrect token");
                 if (user.IsAdmin == false)
                 {
                     if(user.Id == accountId)
@@ -35,7 +35,9 @@ namespace api.Database.Controllers
                     }
                     return BadRequest("you cant add ballance for other users");
                 }
-                User? usr = db.Users.First(x=> x.Id == accountId);
+                User? usr = db.Users.FirstOrDefault(x=> x.Id == accountId);
+                if (usr == null)
+                    return NotFound("Uncorrect token");
                 usr.Balance += 250000;
                 db.SaveChanges();
                 return Ok(usr);

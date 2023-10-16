@@ -30,6 +30,8 @@ namespace api.Database.Controllers
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
                 User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
+                if (user == null)
+                    return NotFound("Uncorrect Token");
                 return Ok(user);
             }
             catch(Exception ex)
@@ -75,7 +77,7 @@ namespace api.Database.Controllers
                 User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username && p.Password == user.Password);
                 // находим пользователя 
                 if ( usr is null)
-                    return StatusCode(401);
+                    return BadRequest("User with this params not found");
                 string token = JwtActions.GenerateToken(usr);
                 return Ok(token);//возвращаем токен
             }
@@ -91,8 +93,9 @@ namespace api.Database.Controllers
         public IActionResult SignOut()
         {
             try
-            {  
-                //реализация отзыва токенов cоздай блэклист лог в бд или в софте
+            {
+                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
+                JwtActions.AddToBlackList(jwt);                
                 return Ok();
             }
             catch (Exception ex)
@@ -110,7 +113,9 @@ namespace api.Database.Controllers
             try
             {
                 var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
-                User? jwtUsr = db.Users.First(x=>x.Username == JwtActions.ReturnUsername(jwt));
+                User? jwtUsr = db.Users.FirstOrDefault(x=>x.Username == JwtActions.ReturnUsername(jwt));
+                if (jwtUsr is null)
+                    return NotFound("Uncorrect Token");
                 if((db.Users.FirstOrDefault(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
                 {
                     jwtUsr.Password = user.Password;

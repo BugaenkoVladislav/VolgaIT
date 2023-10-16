@@ -21,8 +21,8 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n 
-                            Введите  без ковычек 'Bearer' и пробел и только после этого вводите токен.
-                            \r\n\r\nПример: 'Bearer 12345absfdhdcdef'",
+                            Перед токеном должно быть написанно 'Bearer ' и только после этого  токен.
+                            \r\n\r\nПример: 'Bearer 12345absfdhdcdef' ",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
