@@ -24,7 +24,7 @@ namespace api.Database.Controllers
         }
 
 
-        [HttpGet("/Rent/Transport")]
+        [HttpGet("/api/Rent/Transport")]
         public IActionResult RentTransportRadius(double lat, double @long, double radius, string type)
         {
             try
@@ -49,7 +49,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/Rent/{rentId}")]
+        [HttpGet("/api/Rent/{rentId}")]
         public IActionResult GetRentInfo([FromRoute] int rentId)
         {
             try
@@ -74,7 +74,7 @@ namespace api.Database.Controllers
 
 
         [Authorize]
-        [HttpGet("/Rent/MyHistory")]
+        [HttpGet("/api/Rent/MyHistory")]
         public IActionResult GetUserRentInfo()//works but i wanna some remade RentInfo and Rents
         {
             try
@@ -93,7 +93,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/Rent/TransportHistory/{transportId}")]
+        [HttpGet("/api/Rent/TransportHistory/{transportId}")]
         public IActionResult GetUserRentInfo([FromRoute] int transportId)
         {
             try
@@ -119,7 +119,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPost("/Rent/New/{transportId}")]
+        [HttpPost("/api/Rent/New/{transportId}")]
         public IActionResult RentNew([FromRoute] long transportId, string rentType)//подчисти мусор
         {
             try
@@ -167,7 +167,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPost("/Rent/End/{rentId}")]
+        [HttpPost("/api/Rent/End/{rentId}")]
         public IActionResult RentEnd([FromRoute] long rentId, double lat, double @long)
         {
             try

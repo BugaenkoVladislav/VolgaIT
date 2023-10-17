@@ -21,7 +21,7 @@ namespace api.Database.Controllers
         }
 
 
-        [HttpGet("/Transport/{id}")]
+        [HttpGet("/api/Transport/{id}")]
         public IActionResult GetTransport([FromRoute] int id)
         {
             try
@@ -54,7 +54,7 @@ namespace api.Database.Controllers
 
 
         [Authorize]
-        [HttpPost("/Transport")]
+        [HttpPost("/api/Transport")]
         public IActionResult AddTransport([FromBody] TransportInfo transportInfo)
         {
             try
@@ -87,7 +87,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPut("/Transport/{id}")]
+        [HttpPut("/api/Transport/{id}")]
         public IActionResult UpdateTransport([FromRoute] int id, [FromBody] TransportInfo transportInfo )
         {
             try
@@ -122,7 +122,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpDelete("/Transport/{id}")]
+        [HttpDelete("/api/Transport/{id}")]
         public IActionResult DeleteTransport([FromRoute]int id)
         {
             try

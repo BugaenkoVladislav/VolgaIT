@@ -23,7 +23,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/Account/Me")]
+        [HttpGet("/api/Account/Me")]
         public IActionResult Me()
         {
             try
@@ -40,7 +40,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPost("/Account/SignUp")]
+        [HttpPost("/api/Account/SignUp")]
         public IActionResult SignUp([FromBody] User user)
         {
             try
@@ -69,7 +69,7 @@ namespace api.Database.Controllers
 
 
 
-        [HttpPost("/Account/SignIn")]
+        [HttpPost("/api/Account/SignIn")]
         public IActionResult SignIn([FromBody] User user)
         {
             try
@@ -89,7 +89,7 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPost("/Account/SignOut")]
+        [HttpPost("/api/Account/SignOut")]
         public IActionResult SignOut()
         {
             try
@@ -107,7 +107,7 @@ namespace api.Database.Controllers
 
 
         [Authorize]
-        [HttpPut("/Account/Update")]
+        [HttpPut("/api/Account/Update")]
         public IActionResult Update([FromBody] User user)
         {
             try

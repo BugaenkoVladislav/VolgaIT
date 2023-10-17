@@ -16,7 +16,7 @@ namespace api.Database.Controllers
             this.db = db;
         }
         [Authorize]
-        [HttpPost("/Payment/Hesoyam/{accountId}")]
+        [HttpPost("/api/Payment/Hesoyam/{accountId}")]
         public IActionResult Hesoyam([FromRoute] int accountId)
         {
             try

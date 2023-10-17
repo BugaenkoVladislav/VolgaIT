@@ -20,7 +20,7 @@ namespace api.Database.Controllers
             this.db = db;
                     
         }
-        [HttpGet("/Admin/Account")]
+        [HttpGet("/api/Admin/Account")]
         public IActionResult GetAllUsers(int start, int count)
         {
             try
@@ -40,7 +40,7 @@ namespace api.Database.Controllers
 
 
 
-        [HttpGet("/Admin/Account/{id}")]
+        [HttpGet("/api/Admin/Account/{id}")]
         public IActionResult GetUser([FromRoute] int id)
         {
             try
@@ -60,7 +60,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPost("/Admin/Account")]
+        [HttpPost("/api/Admin/Account")]
         public IActionResult CreateNewUser([FromBody] User user)
         {
             try
@@ -84,7 +84,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPut("/Admin/Account/{id}")]
+        [HttpPut("/api/Admin/Account/{id}")]
         public IActionResult UpdateUser([FromRoute]int  id, [FromBody] User user)
         {
             try
@@ -116,7 +116,7 @@ namespace api.Database.Controllers
         }
 
 
-        [HttpDelete("/Admin/Account/{id}")]
+        [HttpDelete("/api/Admin/Account/{id}")]
         public IActionResult DeleteUser([FromRoute] int id)
         {
             try

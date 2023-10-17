@@ -18,7 +18,7 @@ namespace api.Database.Controllers
         {
             this.db = db;
         }
-        [HttpGet("/Admin/Rent/{rentId}")]
+        [HttpGet("/api/Admin/Rent/{rentId}")]
         public IActionResult GetRent([FromRoute] int rentId)
         {
             try
@@ -38,7 +38,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpGet("/Admin/UserHistory/{userId}")]
+        [HttpGet("/api/Admin/UserHistory/{userId}")]
         public IActionResult GetUserRents([FromRoute] long userId)
         {
             try
@@ -59,7 +59,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpGet("/Admin/transportHistory/{transportId}")]
+        [HttpGet("/api/Admin/transportHistory/{transportId}")]
         public IActionResult GettransportRents([FromRoute] long transportId)
         {
             try
@@ -79,7 +79,7 @@ namespace api.Database.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpPost("/Admin/Rent")]
+        [HttpPost("/api/Admin/Rent")]
         public IActionResult NewRent([FromBody] RentInfo rent )//подчисти мусор
         {
             try
@@ -116,7 +116,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPut("/Admin/Rent/{id}")]
+        [HttpPut("/api/Admin/Rent/{id}")]
         public IActionResult UpdateRent([FromRoute] int id ,[FromBody] RentInfo rentInfo)//подчисти мусор
         {
             try
@@ -154,7 +154,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpDelete("/Admin/Rent/{rentId}")]
+        [HttpDelete("/api/Admin/Rent/{rentId}")]
         public IActionResult DeleteRent([FromRoute] int rentId)
         {
             try
@@ -176,7 +176,7 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPost("/Admin/Rent/End/{rentId}")]
+        [HttpPost("/api/Admin/Rent/End/{rentId}")]
         public IActionResult EndRent([FromRoute] int rentId,double lat, double @long)
         {
             try
