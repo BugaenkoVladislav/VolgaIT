@@ -30,17 +30,32 @@ namespace api.Database.Controllers
             try
             {
                 TransportType? transportType = db.TransportTypes.FirstOrDefault(x => x.TransportType1 == type);
-                if (transportType == null)
+                if (transportType == null && type != "All")
                     return BadRequest("not have this type");
                 List<long> tsId = new List<long>();
-                foreach (var t in db.Transports.Where(x=>x.IdTransportType == transportType.Id).ToList())
+                if(transportType != null)
                 {
-                    double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
-                    if (d <= radius)
-                        tsId.Add(t.Id);
+                    foreach (var t in db.Transports.Where(x => x.IdTransportType == transportType.Id).ToList())
+                    {
+                        double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
+                        if (d <= radius)
+                            tsId.Add(t.Id);
+                    }
+                    var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
+                    return Ok(transports);
                 }
-                var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
-                return Ok(transports);
+                else 
+                {
+                    foreach (var t in db.Transports)
+                    {
+                        double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
+                        if (d <= radius)
+                        tsId.Add(t.Id);
+                    }
+                    var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
+                    return Ok(transports);
+                }
+                
             }
             catch (Exception ex)
             {

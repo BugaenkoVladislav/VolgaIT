@@ -25,8 +25,8 @@ internal class Program
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n 
-                            Перед токеном должно быть написанно 'Bearer ' и только после этого  токен.
-                            \r\n\r\nПример: 'Bearer 12345absfdhdcdef' ",
+                            Before the Token should be written 'Bearer ' and only after then Token.
+                            \r\n\r\nExample: 'Bearer 12345absfdhdcdef' ",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.ApiKey,
