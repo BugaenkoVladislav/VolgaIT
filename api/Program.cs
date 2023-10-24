@@ -44,8 +44,7 @@ internal class Program
                         Type = ReferenceType.SecurityScheme,
                         Id = "Bearer"
                     }
-                },
-                new string[] {}
+                },new List<string>()
             }
                 });
         });

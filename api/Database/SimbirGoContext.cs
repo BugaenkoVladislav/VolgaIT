@@ -11,6 +11,7 @@ public partial class SimbirGoContext : DbContext
     public SimbirGoContext()
     {
     }
+
     public SimbirGoContext(DbContextOptions<SimbirGoContext> options)
         : base(options)
     {
@@ -176,6 +177,7 @@ public partial class SimbirGoContext : DbContext
             entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.MinutePrice).HasColumnName("minutePrice");
             entity.Property(e => e.Model).HasColumnName("model");
+            entity.Property(e => e.OwnerId).HasColumnName("ownerId");
             entity.Property(e => e.TransportType).HasColumnName("transportType");
         });
 

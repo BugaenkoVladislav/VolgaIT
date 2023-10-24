@@ -11,6 +11,8 @@ public partial class TransportInfo
 
     public string? TransportType { get; set; }
 
+    public long? OwnerId { get; set; }
+
     public string? Model { get; set; }
 
     public string? Color { get; set; }

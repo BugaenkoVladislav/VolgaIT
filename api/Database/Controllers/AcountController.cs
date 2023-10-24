@@ -87,7 +87,6 @@ namespace api.Database.Controllers
             }
             
         }
-
         [Authorize]
         [HttpPost("/api/Account/SignOut")]
         public IActionResult SignOut()
