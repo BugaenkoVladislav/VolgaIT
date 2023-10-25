@@ -76,9 +76,9 @@ namespace api.Database.Controllers
                     return NotFound("Uncorrect Token");
                 if (rent == null)
                     return NotFound("id with this rent not exist");
-                if (user.Id != rent.UserId || user.Id != rent.OwnerId)
+                if (user.Id == rent.UserId || user.Id == rent.OwnerId)
                     return Ok(rent);
-                return BadRequest();
+                return Forbid();
                 
             }
             catch (Exception ex)
@@ -125,7 +125,7 @@ namespace api.Database.Controllers
                     List<RentInfo> rentInfos = db.RentInfos.Where(x => x.TransportId == transportId).ToList();
                     return Ok(rentInfos);
                 }
-                return Forbid("not owner");
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -144,14 +144,10 @@ namespace api.Database.Controllers
                 if (user == null)
                     return NotFound("Uncorrect Token");
                 Transport? ts = db.Transports.FirstOrDefault(x => x.Id == transportId);
-                if (ts == null || ts.CanBeRented == false)
-                    return NotFound("Transport with this ID does not exist");
                 if(ts.IdOwner == user.Id)
-                    return Forbid("owner can not rent him transport");
+                    return Forbid();
                 
                 RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rentType);
-                if (priceType == null)
-                    return BadRequest("not have this type");
                 double priceOfUnit=0;
                 switch (priceType.Id)
                 {
@@ -174,6 +170,10 @@ namespace api.Database.Controllers
                 db.SaveChanges();
                 return Ok();                               
                 
+            }
+            catch (NullReferenceException)
+            {
+                return BadRequest();
             }
             catch (Exception ex)
             {

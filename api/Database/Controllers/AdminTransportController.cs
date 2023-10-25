@@ -29,7 +29,7 @@ namespace api.Database.Controllers
                 User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
                 if (user == null)
                     return NotFound("Uncorrect token");
-                var transports = db.Transports.Skip(start).Take(count).ToList();
+                var transports = db.TransportInfos.Skip(start).Take(count).ToList();
                 return Ok(transports);
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ namespace api.Database.Controllers
                 User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
                 if (usr == null)
                     return NotFound("Uncorrect token");
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
+                TransportInfo? transport = db.TransportInfos.FirstOrDefault(x => x.Id == id);
                 if (transport == null)
                     return NotFound("Id not exist");
                 return Ok(transport);
@@ -69,36 +69,26 @@ namespace api.Database.Controllers
                 Transport? t = db.Transports.FirstOrDefault(x => x.Identifier == transport.Identifier);
                 if (t != null)
                     return BadRequest("Transport with this Identifier already exist");
-                User? user = db.Users.FirstOrDefault(x => transport.OwnerId == x.Id);
-                if (user == null)
-                   return NotFound("User with this id not found");
-                if (transport.CanBeRented != true && transport.CanBeRented != false)
-                    return NotFound("Not correct status CanBeRented");
-                TransportType? transportType = db.TransportTypes.FirstOrDefault(x => transport.TransportType == x.TransportType1);
-                if (transportType == null)
-                    return NotFound("This transport type does not exist");
-                Color? color = db.Colors.FirstOrDefault(x => transport.Color == x.Color1);
-                if (color == null)
-                    return NotFound("This color does not exist");
-                Model? model = db.Models.FirstOrDefault(x => x.Model1 == transport.Model);
-                if (model == null)
-                    return NotFound("This model does not exist");
                 db.Add(new Transport
-                {                  
-                    IdOwner = user.Id,
+                {
+                    IdOwner = Convert.ToInt64(transport.OwnerId),
                     CanBeRented = (bool)transport.CanBeRented,
-                    IdTransportType = transportType.Id,
-                    IdModel = model.Id,
-                    IdColor = color.Id,
+                    IdTransportType = db.TransportTypes.First(x => x.TransportType1 == transport.TransportType).Id,
+                    IdModel = db.Models.First(x => x.Model1 == transport.Model).Id,
+                    IdColor = db.Colors.First(x => x.Color1 == transport.Color).Id,
                     Identifier = transport.Identifier,
+                    Latitude = Convert.ToDouble(transport.Latitude),
+                    Longitude = Convert.ToDouble(transport.Longitude),
+                    MinutePrice = Convert.ToDouble(transport.MinutePrice),
+                    DayPrice = Convert.ToDouble(transport.DayPrice),
                     Description = transport.Description,
-                    Latitude = (double)transport.Latitude,
-                    Longitude = (double)transport.Longitude,
-                    MinutePrice = transport.MinutePrice,
-                    DayPrice = transport.DayPrice,
                 });
                 db.SaveChanges();
                 return Ok(db.TransportInfos.First(x => x.Identifier == transport.Identifier));
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest();
             }
             catch (Exception ex)
             {
@@ -119,19 +109,9 @@ namespace api.Database.Controllers
                 if (t == null)
                     return NotFound("Transport with this Id does not exist");
                 User? owner = db.Users.FirstOrDefault(x => transport.OwnerId == x.Id);
-                if (owner == null)
-                    return NotFound("User with this id not found");
-                if (transport.CanBeRented != true && transport.CanBeRented != false)
-                    return NotFound("Not correct status CanBeRented");
                 TransportType? transportType = db.TransportTypes.FirstOrDefault(x => transport.TransportType == x.TransportType1);
-                if (transport == null)
-                    return NotFound("This transport type does not exist");
                 Color? color = db.Colors.FirstOrDefault(x => transport.Color == x.Color1);
-                if (color == null)
-                    return NotFound("This color does not exist");
                 Model? model = db.Models.FirstOrDefault(x => x.Model1 == transport.Model);
-                if (model == null)
-                    return NotFound("This model does not exist");
                 t.IdOwner = owner.Id;
                 t.CanBeRented = (bool)transport.CanBeRented;
                 t.IdTransportType = transportType.Id;
@@ -147,6 +127,11 @@ namespace api.Database.Controllers
                 db.SaveChanges();
                 return Ok(t);
             }
+            catch(NullReferenceException)
+            {
+                return BadRequest();
+            }
+
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);

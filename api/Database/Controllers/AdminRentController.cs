@@ -88,27 +88,25 @@ namespace api.Database.Controllers
                 User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
                 if (usr == null)
                     return NotFound("Uncorrect token");
-                User? user = db.Users.FirstOrDefault(x=> x.Id == rent.UserId);
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rent.TransportId);                
-                if (user == null)
-                    return NotFound("User with this ID does not exist");
                 if(transport == null || transport.CanBeRented == false)
                     return NotFound("Transport with this ID does not exist");
-                RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rent.PriceType);
-                if (priceType == null)
-                    return NotFound("This type does not exist");
                 db.Add(new Rent
                 {                    
                     IdTransport = Convert.ToInt64(transport.Id),
-                    IdUser = Convert.ToInt64(user.Id),
+                    IdUser = db.Users.FirstOrDefault(x => x.Id == rent.UserId).Id,
                     TimeStart = Convert.ToDateTime(rent.TimeStart),
                     TimeEnd = rent.TimeEnd,                          
-                    PriceType = priceType.Id,
+                    PriceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rent.PriceType).Id,
                     PriceOfUnit = Convert.ToDouble(rent.PriceOfUnit),
                     FinalPrice = rent.FinalPrice
                 });
                 db.SaveChanges();
                 return Ok();
+            }
+            catch (NullReferenceException)
+            {
+                return BadRequest();
             }
             catch (Exception ex)
             {
@@ -128,15 +126,7 @@ namespace api.Database.Controllers
                 Rent? rent = db.Rents.FirstOrDefault(x => x.Id == id);
                 User? user = db.Users.FirstOrDefault(x => x.Id == rentInfo.UserId);
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == rentInfo.TransportId);
-                if (rent == null)
-                    return NotFound("Rent with this ID does not exist");
-                if (user == null)
-                    return NotFound("User with this ID does not exist");
-                if (transport == null)
-                    return NotFound("Transport with this ID does not exist");
                 RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rentInfo.PriceType);
-                if (priceType == null)
-                    return NotFound("this PriceType with this ID does not exist");
                 rent.IdTransport = Convert.ToInt64(transport.Id);
                 rent.IdUser = Convert.ToInt64(user.Id);
                 rent.TimeStart = Convert.ToDateTime(rentInfo.TimeStart);
@@ -147,6 +137,10 @@ namespace api.Database.Controllers
                 db.Update(rent);
                 db.SaveChanges();
                 return Ok();
+            }
+            catch (NullReferenceException)
+            {
+                return BadRequest();
             }
             catch (Exception ex)
             {

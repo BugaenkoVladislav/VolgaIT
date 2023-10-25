@@ -80,6 +80,10 @@ namespace api.Database.Controllers
                 db.SaveChanges();                
                 return Ok(db.TransportInfos.First(x=>x.Identifier == transportInfo.Identifier));
             }
+            catch (InvalidOperationException)
+            {
+                return BadRequest();
+            }
             catch(Exception ex) 
             {
                 return StatusCode(500,ex.Message);
@@ -97,8 +101,8 @@ namespace api.Database.Controllers
                 if (user is null)
                     return NotFound("Uncorrect Token");
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
-                if (transport == null || transport.IdOwner != user.Id)
-                    return Forbid("Not owner");
+                if (transport.IdOwner != user.Id)
+                    return Forbid();
                 transport.CanBeRented = (bool)transportInfo.CanBeRented;                
                 transport.IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id;
                 transport.IdColor = db.Colors.First(x => x.Color1 == transportInfo.Color).Id;
@@ -114,6 +118,10 @@ namespace api.Database.Controllers
                 db.SaveChanges();
                 return Ok(transport);
 
+            }
+            catch (NullReferenceException)
+            {
+                return NotFound();
             }
             catch(Exception ex)
             {
@@ -133,7 +141,7 @@ namespace api.Database.Controllers
                     return NotFound("Uncorrect Token");
                 Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
                 if (transport == null || user.Id != transport.IdOwner)
-                    return Forbid("not owner ");
+                    return Forbid();
                 db.Remove(transport);
                 db.SaveChanges();
                 return Ok();    
