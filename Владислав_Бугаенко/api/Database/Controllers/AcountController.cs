@@ -12,26 +12,24 @@ using api.Database.Models;
 
 namespace api.Database.Controllers
 {
-    [Route("api")]
+    [Route("api/[controller]/")]
     [ApiController]
     public class AcountController : ControllerBase
     {
-        SimbirGoContext db;
-        public AcountController(SimbirGoContext db)
+        private SimbirGoContext _db;
+        private HttpRequest _request;
+        public AcountController(SimbirGoContext db, IHttpContextAccessor httpContextAccessor)
         {
-            this.db = db;
+            _db = db;
+            _request = httpContextAccessor.HttpContext.Request;
         }
-
         [Authorize]
-        [HttpGet("/api/Account/Me")]
+        [HttpGet("Me")]
         public IActionResult Me()
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token");
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
                 return Ok(user);
             }
             catch(Exception ex)
@@ -39,22 +37,21 @@ namespace api.Database.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
-        [HttpPost("/api/Account/SignUp")]
+        [HttpPost("SignUp")]
         public IActionResult SignUp([FromBody] User user)
         {
             try
             {           
-                if (db.Users.FirstOrDefault(p => p.Username == user.Username) == null)
+                if (_db.Users.FirstOrDefault(p => p.Username == user.Username) == null)
                 {
-                    db.Add(new User
+                    _db.Add(new User
                     {
                         Username = user.Username,
                         Password = user.Password,
                         IsAdmin = false,
                         Balance = 0
                     });
-                    db.SaveChanges();
+                    _db.SaveChanges();
                     return Ok();
                 }
                 return BadRequest("This username allready exist");
@@ -64,22 +61,16 @@ namespace api.Database.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
-
-
-
-
-        [HttpPost("/api/Account/SignIn")]
+        [HttpPost("SignIn")]
         public IActionResult SignIn([FromBody] User user)
         {
             try
             {
-                User? usr = db.Users.FirstOrDefault(p => p.Username == user.Username && p.Password == user.Password);
-                // находим пользователя 
+                User? usr = _db.Users.FirstOrDefault(p => p.Username == user.Username && p.Password == user.Password);
                 if ( usr is null)
                     return BadRequest("User with this params not found");
                 string token = JwtActions.GenerateToken(usr);
-                return Ok(token);//возвращаем токен
+                return Ok(token);
             }
             catch(Exception ex)
             {
@@ -88,13 +79,12 @@ namespace api.Database.Controllers
             
         }
         [Authorize]
-        [HttpPost("/api/Account/SignOut")]
+        [HttpPost("SignOut")]
         public IActionResult SignOut()
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
-                JwtActions.AddToBlackList(jwt);                
+                JwtActions.AddToBlackList(_request);                
                 return Ok();
             }
             catch (Exception ex)
@@ -102,26 +92,20 @@ namespace api.Database.Controllers
                 return StatusCode(500,ex.Message);
             }
         }
-
-
-
         [Authorize]
-        [HttpPut("/api/Account/Update")]
+        [HttpPut("Update")]
         public IActionResult Update([FromBody] User user)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ","");
-                User? jwtUsr = db.Users.FirstOrDefault(x=>x.Username == JwtActions.ReturnUsername(jwt));
-                if (jwtUsr is null)
-                    return NotFound("Uncorrect Token");
-                if((db.Users.FirstOrDefault(x => x.Username == user.Username) is null) || jwtUsr.Username == user.Username)
+                var oldUser = _db.Users.FirstOrDefault(x=>x.Username == JwtActions.ReturnUsername(_request));
+                if(oldUser != null &&( (_db.Users.FirstOrDefault(x => x.Username == user.Username) is null) || oldUser.Username == user.Username))
                 {
-                    jwtUsr.Password = user.Password;
-                    jwtUsr.Username = user.Username;
-                    db.Update(jwtUsr);
-                    db.SaveChanges();
-                    return Ok(JwtActions.GenerateToken(jwtUsr));
+                    oldUser.Password = user.Password;
+                    oldUser.Username = user.Username;
+                    _db.Update(oldUser);
+                    _db.SaveChanges();
+                    return Ok(JwtActions.GenerateToken(oldUser));
                 }
                 return BadRequest();    
                 
@@ -131,8 +115,5 @@ namespace api.Database.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        
-
-        
     }
 }

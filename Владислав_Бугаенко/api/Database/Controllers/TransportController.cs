@@ -10,27 +10,27 @@ using System.Security.Cryptography.Xml;
 
 namespace api.Database.Controllers
 {
-    [Route("api")]
+    [Route("api/[controller]/")]
     [ApiController]
     public class TransportController : ControllerBase
     {
-        SimbirGoContext db;
-        public TransportController(SimbirGoContext db) 
+        private HttpRequest _request;
+        private SimbirGoContext _db;
+        public TransportController(SimbirGoContext db, IHttpContextAccessor httpContextAccessor) 
         {            
-            this.db = db;
+            _db = db;
+            _request = httpContextAccessor.HttpContext.Request;
         }
 
 
-        [HttpGet("/api/Transport/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetTransport([FromRoute] int id)
         {
             try
             {
-                TransportInfo? transportInfo = db.TransportInfos.FirstOrDefault(x=>x.Id == id);
+                var transportInfo = _db.TransportInfos.FirstOrDefault(x=>x.Id == id);
                 if (transportInfo is null)
-                {
                     return NotFound("Transport with this id not exist");
-                }
                 return Ok(new TransportInfo
                 {
                     Id = transportInfo.Id,
@@ -51,38 +51,32 @@ namespace api.Database.Controllers
                 return StatusCode(500,ex.Message);
             }
         }
-
-
         [Authorize]
-        [HttpPost("/api/Transport")]
+        [HttpPost("")]
         public IActionResult AddTransport([FromBody] TransportInfo transportInfo)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user is null)
-                    return NotFound("Uncorrect Token");
-                db.Add(new Transport
-                {                   
+                _db.Add(new Transport
+                {
                     CanBeRented = (bool)transportInfo.CanBeRented,
-                    IdTransportType = db.TransportTypes.First(x => x.TransportType1 == transportInfo.TransportType).Id,
-                    IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id,
-                    IdColor = db.Colors.First(x => x.Color1 == transportInfo.Color).Id,
+                    IdTransportType = _db.TransportTypes.First(x => x.TransportType1 == transportInfo.TransportType).Id,
+                    IdModel = _db.Models.First(x => x.Model1 == transportInfo.Model).Id,
+                    IdColor = _db.Colors.First(x => x.Color1 == transportInfo.Color).Id,
                     Identifier = transportInfo.Identifier,
                     Latitude = Convert.ToDouble(transportInfo.Latitude),
                     Longitude = Convert.ToDouble(transportInfo.Longitude),
                     MinutePrice = Convert.ToDouble(transportInfo.MinutePrice),
                     DayPrice = Convert.ToDouble(transportInfo.DayPrice),
                     Description = transportInfo.Description,
-                    IdOwner = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt)).Id
+                    IdOwner = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request)).Id
                 });
-                db.SaveChanges();                
-                return Ok(db.TransportInfos.First(x=>x.Identifier == transportInfo.Identifier));
+                _db.SaveChanges();
+                return Ok(_db.TransportInfos.First(x => x.Identifier == transportInfo.Identifier));
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
             catch(Exception ex) 
             {
@@ -91,60 +85,65 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPut("/api/Transport/{id}")]
+        [HttpPut("{id}")]
         public IActionResult UpdateTransport([FromRoute] int id, [FromBody] TransportInfo transportInfo )
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");//получаем наш jwt токен
-                User? user = db.Users.FirstOrDefault(x=> x.Username == JwtActions.ReturnUsername(jwt));
-                if (user is null)
-                    return NotFound("Uncorrect Token");
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
-                if (transport.IdOwner != user.Id)
-                    return Forbid();
-                transport.CanBeRented = (bool)transportInfo.CanBeRented;                
-                transport.IdModel = db.Models.First(x => x.Model1 == transportInfo.Model).Id;
-                transport.IdColor = db.Colors.First(x => x.Color1 == transportInfo.Color).Id;
-                transport.Identifier = transportInfo.Identifier;
-                transport.Latitude = Convert.ToDouble(transportInfo.Latitude);
-                transport.Longitude = Convert.ToDouble(transportInfo.Longitude);
-                transport.MinutePrice = Convert.ToDouble(transportInfo.MinutePrice);
-                transport.DayPrice = Convert.ToDouble(transportInfo.DayPrice);
-                transport.Description = transportInfo.Description;
-                transport.IdOwner = db.Users.First(x => x.Username == JwtActions.ReturnUsername(jwt)).Id;
-                
-                db.Update(transport);
-                db.SaveChanges();
-                return Ok(transport);
-
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var transport = _db.Transports.FirstOrDefault(x => x.Id == id);
+                if (transport.IdOwner == user.Id)
+                {
+                    transport.CanBeRented = (bool)transportInfo.CanBeRented;
+                    transport.IdModel = _db.Models.First(x => x.Model1 == transportInfo.Model).Id;
+                    transport.IdColor = _db.Colors.First(x => x.Color1 == transportInfo.Color).Id;
+                    transport.Identifier = transportInfo.Identifier;
+                    transport.Latitude = Convert.ToDouble(transportInfo.Latitude);
+                    transport.Longitude = Convert.ToDouble(transportInfo.Longitude);
+                    transport.MinutePrice = Convert.ToDouble(transportInfo.MinutePrice);
+                    transport.DayPrice = Convert.ToDouble(transportInfo.DayPrice);
+                    transport.Description = transportInfo.Description;
+                    transport.IdOwner = _db.Users.First(x => x.Username == JwtActions.ReturnUsername(_request)).Id;
+                    _db.Update(transport);
+                    _db.SaveChanges();
+                    return Ok(transport);
+                }
+                return Forbid();
             }
-            catch (NullReferenceException)
+            catch (InvalidOperationException ex)
             {
-                return NotFound();
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch(Exception ex)
             {
                 return StatusCode(500,ex.Message);
             }
         }
-
         [Authorize]
-        [HttpDelete("/api/Transport/{id}")]
+        [HttpDelete("{id}")]
         public IActionResult DeleteTransport([FromRoute]int id)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token");
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == id);
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var transport = _db.Transports.FirstOrDefault(x => x.Id == id);
                 if (transport == null || user.Id != transport.IdOwner)
                     return Forbid();
-                db.Remove(transport);
-                db.SaveChanges();
-                return Ok();    
+                _db.Remove(transport);
+                _db.SaveChanges();
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch(Exception ex)
             {

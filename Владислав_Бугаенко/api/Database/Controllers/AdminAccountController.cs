@@ -9,7 +9,7 @@ using Thinktecture.IdentityModel.Authorization.Mvc;
 namespace api.Database.Controllers
 {
     [Authorize(Roles = "Admin")]
-    [Route("api")]
+    [Route("api/[controller]/")]
     [ApiController]
     public class AdminAccountController : ControllerBase
     {
@@ -20,15 +20,11 @@ namespace api.Database.Controllers
             this.db = db;
                     
         }
-        [HttpGet("/api/Admin/Account")]
+        [HttpGet("")]
         public IActionResult GetAllUsers(int start, int count)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect token");
                 var users = db.Users.Skip(start).Take(count).ToList();
                 return Ok(users);
             }
@@ -40,16 +36,12 @@ namespace api.Database.Controllers
 
 
 
-        [HttpGet("/api/Admin/Account/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetUser([FromRoute] int id)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (usr == null)
-                    return NotFound("Uncorrect token");
-                User? user = db.Users.FirstOrDefault(x => x.Id == id);
+                var user = db.Users.FirstOrDefault(x => x.Id == id);
                 if (user == null)
                     return NotFound("Id not exist");
                 return Ok(user);
@@ -60,15 +52,11 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPost("/api/Admin/Account")]
+        [HttpPost("")]
         public IActionResult CreateNewUser([FromBody] User user)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (usr == null)
-                    return NotFound("Uncorrect token");
                 if (db.Users.FirstOrDefault(x=> x.Username == user.Username) == null )
                 {
                     db.Add(user);
@@ -76,7 +64,6 @@ namespace api.Database.Controllers
                     return Ok(user);
                 }
                 return BadRequest("This username already exist");
-                
             }
             catch(Exception ex)
             {
@@ -84,16 +71,12 @@ namespace api.Database.Controllers
             }
         }
 
-        [HttpPut("/api/Admin/Account/{id}")]
+        [HttpPut("{id}")]
         public IActionResult UpdateUser([FromRoute]int  id, [FromBody] User user)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (usr == null)
-                    return NotFound("Uncorrect token");
-                User? existUser = db.Users.FirstOrDefault(x => x.Id == id);
+                var existUser = db.Users.FirstOrDefault(x => x.Id == id);
                 if (existUser == null)
                     return NotFound("User with this id not exist");                
                 if (db.Users.First(x => x.Username == user.Username) == null || existUser.Username == user.Username)
@@ -114,18 +97,12 @@ namespace api.Database.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
-
-        [HttpDelete("/api/Admin/Account/{id}")]
+        [HttpDelete("{id}")]
         public IActionResult DeleteUser([FromRoute] int id)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? usr = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (usr == null)
-                    return NotFound("Uncorrect token");
-                User? user = db.Users.FirstOrDefault(x => x.Id == id);
+                var user = db.Users.FirstOrDefault(x => x.Id == id);
                 if (user == null)
                     return NotFound("Id not exist");
                 db.Remove(user);

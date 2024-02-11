@@ -1,61 +1,52 @@
 ﻿using api.Database.Models;
-using api.Database.Views;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
-using NpgsqlTypes;
-using System.Data;
-using System.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace api.Database.Controllers
 {
-    [Route("api")]
+    [Route("api/[controller]/")]
     [ApiController]
     public class RentController : ControllerBase
     {
-        SimbirGoContext db;
-        public RentController(SimbirGoContext db)
+        private SimbirGoContext _db;
+        private HttpRequest _request;
+        public RentController(SimbirGoContext db,IHttpContextAccessor httpContextAccessor)
         {
-            this.db = db;
+            _db = db;
+            _request = httpContextAccessor.HttpContext.Request;
         }
 
 
-        [HttpGet("/api/Rent/Transport")]
+        [HttpGet("Transport")]
         public IActionResult RentTransportRadius(double lat, double @long, double radius, string type)
         {
+            var result = new List<Transport>();
             try
             {
-                TransportType? transportType = db.TransportTypes.FirstOrDefault(x => x.TransportType1 == type);
+                var transportType = _db.TransportTypes.FirstOrDefault(x => x.TransportType1 == type);
                 if (transportType == null && type != "All")
                     return BadRequest("not have this type");
-                List<long> tsId = new List<long>();
-                if(transportType != null)
+                if (transportType != null)
                 {
-                    foreach (var t in db.Transports.Where(x => x.IdTransportType == transportType.Id).ToList())
-                    {
-                        double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
-                        if (d <= radius)
-                            tsId.Add(t.Id);
-                    }
-                    var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
-                    return Ok(transports);
+                    var ts = _db.Transports.Where(x => x.IdTransportType == transportType.Id).ToList();
+                    result = JwtActions.FindInRadius(ts, lat, @long, radius);
                 }
-                else 
+                else
                 {
-                    foreach (var t in db.Transports)
-                    {
-                        double d = Math.Sqrt(Math.Pow(Convert.ToDouble(t.Longitude) - @long, 2) + Math.Pow(Convert.ToDouble(t.Latitude) - lat, 2));
-                        if (d <= radius)
-                        tsId.Add(t.Id);
-                    }
-                    var transports = db.TransportInfos.Where(u => tsId.Contains(u.Id.Value) && u.CanBeRented == true).ToList();
-                    return Ok(transports);
+                    var ts = _db.Transports.ToList();
+                    result = JwtActions.FindInRadius(ts, lat, @long, radius);
                 }
-                
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -64,22 +55,25 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/api/Rent/{rentId}")]
+        [HttpGet("{rentId}")]
         public IActionResult GetRentInfo([FromRoute] int rentId)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                RentInfo? rent = db.RentInfos.FirstOrDefault(x => x.Id == rentId);
-                if(user == null)
-                    return NotFound("Uncorrect Token");
-                if (rent == null)
-                    return NotFound("id with this rent not exist");
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var rent = _db.RentInfos.FirstOrDefault(x => x.Id == rentId);
                 if (user.Id == rent.UserId || user.Id == rent.OwnerId)
                     return Ok(rent);
                 return Forbid();
-                
+
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -89,17 +83,18 @@ namespace api.Database.Controllers
 
 
         [Authorize]
-        [HttpGet("/api/Rent/MyHistory")]
-        public IActionResult GetUserRentInfo()//works but i wanna some remade RentInfo and Rents
+        [HttpGet("MyHistory")]
+        public IActionResult GetUserRentInfo()
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token ");
-                List<RentInfo> rents = db.RentInfos.Where(x => x.UserId == user.Id).ToList();
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var rents = _db.RentInfos.Where(x => x.UserId == user.Id).ToList();
                 return Ok(rents);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -108,24 +103,27 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpGet("/api/Rent/TransportHistory/{transportId}")]
+        [HttpGet("TransportHistory/{transportId}")]
         public IActionResult GetUserRentInfo([FromRoute] int transportId)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token");
-                Transport? transport = db.Transports.FirstOrDefault(x => x.Id == transportId);
-                if (transport is null)
-                    return NotFound("uncorrect Id transport");
-                if (transport.IdOwner == user.Id)
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var transport = _db.Transports.FirstOrDefault(x => x.Id == transportId);
+                if (transport.IdOwner == user.Id || transport is null)
                 {
-                    List<RentInfo> rentInfos = db.RentInfos.Where(x => x.TransportId == transportId).ToList();
+                    var rentInfos = _db.RentInfos.Where(x => x.TransportId == transportId).ToList();
                     return Ok(rentInfos);
                 }
                 return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -134,32 +132,27 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPost("/api/Rent/New/{transportId}")]
+        [HttpPost("New/{transportId}")]
         public IActionResult RentNew([FromRoute] long transportId, string rentType)//подчисти мусор
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token");
-                Transport? ts = db.Transports.FirstOrDefault(x => x.Id == transportId);
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var ts = _db.Transports.FirstOrDefault(x => x.Id == transportId);
                 if(ts.IdOwner == user.Id)
                     return Forbid();
-                
-                RentType? priceType = db.RentTypes.FirstOrDefault(x => x.RentType1 == rentType);
+                var priceType = _db.RentTypes.FirstOrDefault(x => x.RentType1 == rentType);
                 double priceOfUnit=0;
                 switch (priceType.Id)
                 {
                     case 1:
-                        priceOfUnit = Convert.ToDouble(db.Transports.First(x => x.Id == transportId).MinutePrice);
+                        priceOfUnit = Convert.ToDouble(_db.Transports.First(x => x.Id == transportId).MinutePrice);
                         break;
                     case 2:
-                        priceOfUnit = Convert.ToDouble(db.Transports.First(x => x.Id == transportId).DayPrice);
-                        break;                        
+                        priceOfUnit = Convert.ToDouble(_db.Transports.First(x => x.Id == transportId).DayPrice);
+                        break;
                 }
-
-                db.Add(new Rent
+                _db.Add(new Rent
                 {
                     TimeStart = DateTime.UtcNow,
                     IdUser = user.Id,
@@ -167,13 +160,17 @@ namespace api.Database.Controllers
                     PriceType = priceType.Id,
                     PriceOfUnit = priceOfUnit
                 });
-                db.SaveChanges();
-                return Ok();                               
-                
+                _db.SaveChanges();
+                return Ok();
+
             }
-            catch (NullReferenceException)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -182,41 +179,42 @@ namespace api.Database.Controllers
         }
 
         [Authorize]
-        [HttpPost("/api/Rent/End/{rentId}")]
+        [HttpPost("End/{rentId}")]
         public IActionResult RentEnd([FromRoute] long rentId, double lat, double @long)
         {
             try
             {
-                var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                User? user = db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(jwt));
-                if (user == null)
-                    return NotFound("Uncorrect Token");
-                Rent? rent = db.Rents.FirstOrDefault(x => x.Id == rentId);
-                if(rent != null)
-                {
-                    Transport transport = db.Transports.First(x => x.Id == rent.IdTransport);
-                    if (rent.IdUser == user.Id)
+                var user = _db.Users.FirstOrDefault(x => x.Username == JwtActions.ReturnUsername(_request));
+                var rent = _db.Rents.FirstOrDefault(x => x.Id == rentId);
+                var transport = _db.Transports.First(x => x.Id == rent.IdTransport);
+                if (rent.IdUser == user.Id)
+                { 
+                    rent.TimeEnd = DateTime.UtcNow;
+                    TimeSpan difference = DateTime.UtcNow - rent.TimeStart;
+                    if (rent.PriceType == 2)
                     {
-                        rent.TimeEnd = DateTime.UtcNow;
-                        TimeSpan difference = DateTime.UtcNow - rent.TimeStart;
-                        if (rent.PriceType == 2)
-                        {
-                            rent.FinalPrice = (difference.Days + 1) * rent.PriceOfUnit;
-                        }
-                        else if (rent.PriceType == 1)
-                        {
-                            rent.FinalPrice = (difference.Minutes + (difference.Hours * 60) + (difference.Days * 24 * 60)) * rent.PriceOfUnit;
-                        }
-                        db.Update(rent);
-                        transport.Latitude = lat;
-                        transport.Longitude = @long;
-                        db.Update(transport);
-                        db.SaveChanges();
-                        return Ok();
+                        rent.FinalPrice = (difference.Days + 1) * rent.PriceOfUnit;
                     }
-                    return Forbid("not your rent");
+                    else if (rent.PriceType == 1)
+                    {
+                        rent.FinalPrice = (difference.Minutes + (difference.Hours * 60) + (difference.Days * 24 * 60)) * rent.PriceOfUnit;
+                    }
+                    _db.Update(rent);
+                    transport.Latitude = lat;
+                    transport.Longitude = @long;
+                    _db.Update(transport);
+                    _db.SaveChanges();
+                    return Ok();
                 }
-                return NotFound("Rent with this Id does not exist");               
+                return Forbid("not your rent");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullReferenceException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
